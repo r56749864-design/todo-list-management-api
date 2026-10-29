@@ -21,21 +21,48 @@ const app = express();
 app.use(logger);
 app.use(express.json());
 
-// Routes
+// Routes API
 app.use("/api/auth", authRoutes);
 app.use("/api/todos", todoRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
 app.use("/api/external", externalRoutes);
 
-// Swagger UI - static files
+// Swagger UI - lokasi file CSS dan JavaScript
 const swaggerUiPath = path.dirname(
   require.resolve("swagger-ui-dist/package.json")
 );
 
-app.use("/api-docs", express.static(swaggerUiPath));
+// Swagger UI - gunakan spesifikasi Todo List API
+app.get("/api-docs/swagger-initializer.js", (req, res) => {
+  res.type("application/javascript");
+  res.setHeader("Cache-Control", "no-store");
 
-// Swagger UI - dokumentasi API
+  res.send(`
+    window.onload = function() {
+      window.ui = SwaggerUIBundle({
+        spec: ${JSON.stringify(swaggerSpec)},
+        dom_id: "#swagger-ui",
+        deepLinking: true,
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        layout: "StandaloneLayout"
+      });
+    };
+  `);
+});
+
+// Swagger UI - file statis
+app.use(
+  "/api-docs",
+  express.static(swaggerUiPath, {
+    index: false
+  })
+);
+
+// Swagger UI - halaman dokumentasi
 app.use(
   "/api-docs",
   swaggerUi.serveFiles(swaggerSpec),
