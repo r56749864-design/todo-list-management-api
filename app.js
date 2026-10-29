@@ -1,9 +1,13 @@
+
 const express = require("express");
+const path = require("path");
+
 const authRoutes = require("./routes/authRoutes");
 const todoRoutes = require("./routes/todoRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const activityLogRoutes = require("./routes/activityLogRoutes");
 const externalRoutes = require("./routes/externalRoutes");
+
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
 
@@ -24,8 +28,19 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/activity-logs", activityLogRoutes);
 app.use("/api/external", externalRoutes);
 
-// Swagger UI
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger UI - static files
+const swaggerUiPath = path.dirname(
+  require.resolve("swagger-ui-dist/package.json")
+);
+
+app.use("/api-docs", express.static(swaggerUiPath));
+
+// Swagger UI - dokumentasi API
+app.use(
+  "/api-docs",
+  swaggerUi.serveFiles(swaggerSpec),
+  swaggerUi.setup(swaggerSpec)
+);
 
 // Halaman utama
 app.get("/", (req, res) => {
