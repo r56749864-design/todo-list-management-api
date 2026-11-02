@@ -28,7 +28,7 @@ const {
  *   description: Pengelolaan daftar tugas
  */
 
-// Semua endpoint Todo harus menggunakan JWT
+// Semua endpoint Todo menggunakan JWT
 router.use(authMiddleware);
 
 /**
@@ -58,10 +58,15 @@ router.use(authMiddleware);
  *                 type: string
  *                 enum: [pending, in_progress, completed]
  *                 example: pending
+ *               priority:
+ *                 type: string
+ *                 enum: [low, medium, high]
+ *                 example: medium
  *               category:
  *                 type: string
+ *                 nullable: true
  *                 example: 6ad81d0f2ed4d44646b62e0a
- *               dueDate:
+ *               due_date:
  *                 type: string
  *                 format: date-time
  *                 example: "2026-11-01T10:00:00.000Z"
@@ -85,6 +90,7 @@ router.post(
  * /api/todos:
  *   get:
  *     summary: Mendapatkan daftar Todo
+ *     description: Mendukung filtering, pencarian, pagination, serta sorting ASC dan DESC.
  *     tags: [Todos]
  *     security:
  *       - BearerAuth: []
@@ -96,6 +102,12 @@ router.post(
  *           enum: [pending, in_progress, completed]
  *         description: Filter berdasarkan status
  *       - in: query
+ *         name: priority
+ *         schema:
+ *           type: string
+ *           enum: [low, medium, high]
+ *         description: Filter berdasarkan prioritas
+ *       - in: query
  *         name: category
  *         schema:
  *           type: string
@@ -104,12 +116,32 @@ router.post(
  *         name: search
  *         schema:
  *           type: string
- *         description: Pencarian Todo
+ *         description: Pencarian berdasarkan judul Todo
+ *       - in: query
+ *         name: archived
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: false untuk Todo aktif, true untuk Todo yang diarsipkan
  *       - in: query
  *         name: sort
  *         schema:
  *           type: string
- *         description: Pengurutan hasil
+ *           enum:
+ *             - created_at
+ *             - updated_at
+ *             - due_date
+ *             - title
+ *             - priority
+ *           default: created_at
+ *         description: Kolom pengurutan Todo
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: asc untuk urutan naik, desc untuk urutan turun
  *       - in: query
  *         name: page
  *         schema:
@@ -122,13 +154,14 @@ router.post(
  *         schema:
  *           type: integer
  *           minimum: 1
+ *           maximum: 100
  *           default: 10
  *         description: Jumlah data per halaman
  *     responses:
  *       200:
  *         description: Daftar Todo berhasil diambil
  *       400:
- *         description: Parameter filter tidak valid
+ *         description: Parameter query tidak valid
  *       401:
  *         description: Token tidak valid atau tidak tersedia
  */
@@ -202,10 +235,13 @@ router.get(
  *               status:
  *                 type: string
  *                 enum: [pending, in_progress, completed]
+ *               priority:
+ *                 type: string
+ *                 enum: [low, medium, high]
  *               category:
  *                 type: string
- *                 example: 6ad81d0f2ed4d44646b62e0a
- *               dueDate:
+ *                 nullable: true
+ *               due_date:
  *                 type: string
  *                 format: date-time
  *     responses:
