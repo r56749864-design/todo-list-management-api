@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const activityLogSchema = new mongoose.Schema(
@@ -8,6 +9,7 @@ const activityLogSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+
     action: {
       type: String,
       enum: [
@@ -23,27 +25,39 @@ const activityLogSchema = new mongoose.Schema(
       ],
       required: true,
     },
+
     description: {
       type: String,
       trim: true,
       default: "",
       maxlength: 500,
     },
+
     related_todo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Todo",
       default: null,
     },
+
+    // Menyimpan kondisi Todo saat aktivitas terjadi.
+    // Tetap tersimpan meskipun Todo diubah atau dihapus.
+    snapshot: {
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
+    },
+
     created_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
+
     updated_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
+
     archived: {
       type: Boolean,
       default: false,

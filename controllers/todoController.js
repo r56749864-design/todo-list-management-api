@@ -5,6 +5,21 @@ const Todo = require("../models/Todo");
 const Category = require("../models/Category");
 const ActivityLog = require("../models/ActivityLog");
 
+// Membuat snapshot kondisi Todo saat aktivitas terjadi
+const createTodoSnapshot = (todo) => {
+  if (!todo) return null;
+
+  return {
+    title: todo.title,
+    description: todo.description,
+    status: todo.status,
+    priority: todo.priority,
+    due_date: todo.due_date,
+    category: todo.category,
+    archived: todo.archived,
+  };
+};
+
 // Membuat Todo baru
 const createTodo = async (req, res) => {
   try {
@@ -57,6 +72,7 @@ const createTodo = async (req, res) => {
       action: "todo_created",
       description: `Membuat todo: ${todo.title}`,
       related_todo: todo._id,
+      snapshot: createTodoSnapshot(todo),
       created_by: req.user.id,
       updated_by: req.user.id,
     });
@@ -362,6 +378,7 @@ const updateTodo = async (req, res) => {
       action: "todo_updated",
       description: `Memperbarui todo: ${todo.title}`,
       related_todo: todo._id,
+      snapshot: createTodoSnapshot(todo),
       created_by: req.user.id,
       updated_by: req.user.id,
     });
@@ -408,6 +425,7 @@ const deleteTodo = async (req, res) => {
       action: "todo_deleted",
       description: `Menghapus todo: ${todo.title}`,
       related_todo: todo._id,
+      snapshot: createTodoSnapshot(todo),
       created_by: req.user.id,
       updated_by: req.user.id,
     });
@@ -465,6 +483,7 @@ const archiveTodo = async (req, res) => {
       action: "todo_archived",
       description: `Mengarsipkan todo: ${todo.title}`,
       related_todo: todo._id,
+      snapshot: createTodoSnapshot(todo),
       created_by: req.user.id,
       updated_by: req.user.id,
     });
