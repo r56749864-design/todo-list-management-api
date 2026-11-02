@@ -1,6 +1,76 @@
 
 const swaggerJsdoc = require("swagger-jsdoc");
 
+const id = {
+  type: "string",
+  example: "6ad81d0f2ed4d44646b62e0a",
+};
+
+const dateTime = {
+  type: "string",
+  format: "date-time",
+};
+
+const status = {
+  type: "string",
+  enum: ["pending", "in_progress", "completed"],
+};
+
+const priority = {
+  type: "string",
+  enum: ["low", "medium", "high"],
+};
+
+const bearer = [{ bearerAuth: [] }];
+const apiKey = [{ apiKeyAuth: [] }];
+
+const pathId = {
+  name: "id",
+  in: "path",
+  required: true,
+  description: "ID data",
+  schema: { type: "string" },
+};
+
+const response = (description) => ({ description });
+
+const jsonBody = (properties, required = []) => ({
+  required: true,
+  content: {
+    "application/json": {
+      schema: {
+        type: "object",
+        ...(required.length ? { required } : {}),
+        properties,
+      },
+    },
+  },
+});
+
+const todoFields = {
+  title: {
+    type: "string",
+    maxLength: 150,
+    example: "Belajar membuat REST API",
+  },
+  description: {
+    type: "string",
+    maxLength: 2000,
+    example: "Mempelajari Node.js dan Express",
+  },
+  status,
+  priority,
+  due_date: {
+    ...dateTime,
+    nullable: true,
+  },
+  category: {
+    type: "string",
+    nullable: true,
+    description: "ID kategori, opsional",
+  },
+};
+
 const options = {
   definition: {
     openapi: "3.0.0",
@@ -50,7 +120,6 @@ const options = {
           bearerFormat: "JWT",
           description: "Masukkan token JWT dari endpoint login.",
         },
-
         apiKeyAuth: {
           type: "apiKey",
           in: "header",
@@ -63,73 +132,24 @@ const options = {
         Todo: {
           type: "object",
           properties: {
-            _id: {
-              type: "string",
-              example: "6ad81d0f2ed4d44646b62e0a",
-            },
-            title: {
-              type: "string",
-              maxLength: 150,
-              example: "Belajar membuat REST API",
-            },
-            description: {
-              type: "string",
-              maxLength: 2000,
-              example: "Mempelajari Node.js dan Express",
-            },
-            status: {
-              type: "string",
-              enum: ["pending", "in_progress", "completed"],
-              default: "pending",
-            },
-            priority: {
-              type: "string",
-              enum: ["low", "medium", "high"],
-              default: "medium",
-            },
-            due_date: {
-              type: "string",
-              format: "date-time",
-              nullable: true,
-            },
-            user: {
-              type: "string",
-              description: "ID pemilik Todo",
-            },
-            category: {
-              type: "string",
-              nullable: true,
-              description: "ID kategori Todo",
-            },
-            created_by: {
-              type: "string",
-              description: "ID pembuat Todo",
-            },
-            updated_by: {
-              type: "string",
-              description: "ID pengguna yang terakhir memperbarui Todo",
-            },
+            _id: id,
+            ...todoFields,
+            user: id,
+            created_by: id,
+            updated_by: id,
             archived: {
               type: "boolean",
               default: false,
             },
-            created_at: {
-              type: "string",
-              format: "date-time",
-            },
-            updated_at: {
-              type: "string",
-              format: "date-time",
-            },
+            created_at: dateTime,
+            updated_at: dateTime,
           },
         },
 
         Category: {
           type: "object",
           properties: {
-            _id: {
-              type: "string",
-            },
+            _id: id,
             name: {
               type: "string",
               example: "Sekolah",
@@ -138,28 +158,18 @@ const options = {
               type: "string",
               example: "Kategori tugas sekolah",
             },
-            user: {
-              type: "string",
-            },
-            created_at: {
-              type: "string",
-              format: "date-time",
-            },
-            updated_at: {
-              type: "string",
-              format: "date-time",
-            },
+            user: id,
+            created_at: dateTime,
+            updated_at: dateTime,
           },
         },
 
         ActivityLog: {
           type: "object",
           properties: {
-            _id: {
-              type: "string",
-            },
+            _id: id,
             user: {
-              type: "string",
+              ...id,
               nullable: true,
             },
             action: {
@@ -179,31 +189,36 @@ const options = {
             description: {
               type: "string",
               maxLength: 500,
+              example: "Membuat Todo baru",
             },
             related_todo: {
-              type: "string",
+              ...id,
               nullable: true,
             },
+            snapshot: {
+              type: "object",
+              nullable: true,
+              description:
+                "Salinan data saat aktivitas terjadi, jika disimpan oleh backend.",
+              additionalProperties: true,
+              example: {
+                title: "Belajar membuat REST API",
+              },
+            },
             created_by: {
-              type: "string",
+              ...id,
               nullable: true,
             },
             updated_by: {
-              type: "string",
+              ...id,
               nullable: true,
             },
             archived: {
               type: "boolean",
               default: false,
             },
-            created_at: {
-              type: "string",
-              format: "date-time",
-            },
-            updated_at: {
-              type: "string",
-              format: "date-time",
-            },
+            created_at: dateTime,
+            updated_at: dateTime,
           },
         },
       },
@@ -214,37 +229,29 @@ const options = {
         post: {
           tags: ["Authentication"],
           summary: "Mendaftarkan pengguna baru",
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["name", "email", "password"],
-                  properties: {
-                    name: {
-                      type: "string",
-                      example: "Ahmad",
-                    },
-                    email: {
-                      type: "string",
-                      format: "email",
-                      example: "ahmad@example.com",
-                    },
-                    password: {
-                      type: "string",
-                      format: "password",
-                      example: "password123",
-                    },
-                  },
-                },
+          requestBody: jsonBody(
+            {
+              name: {
+                type: "string",
+                example: "Ahmad",
+              },
+              email: {
+                type: "string",
+                format: "email",
+                example: "ahmad@example.com",
+              },
+              password: {
+                type: "string",
+                format: "password",
+                example: "password123",
               },
             },
-          },
+            ["name", "email", "password"]
+          ),
           responses: {
-            201: { description: "Registrasi berhasil" },
-            400: { description: "Data tidak valid" },
-            409: { description: "Email sudah terdaftar" },
+            201: response("Registrasi berhasil"),
+            400: response("Data tidak valid"),
+            409: response("Email sudah terdaftar"),
           },
         },
       },
@@ -253,30 +260,22 @@ const options = {
         post: {
           tags: ["Authentication"],
           summary: "Login pengguna",
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["email", "password"],
-                  properties: {
-                    email: {
-                      type: "string",
-                      format: "email",
-                    },
-                    password: {
-                      type: "string",
-                      format: "password",
-                    },
-                  },
-                },
+          requestBody: jsonBody(
+            {
+              email: {
+                type: "string",
+                format: "email",
+              },
+              password: {
+                type: "string",
+                format: "password",
               },
             },
-          },
+            ["email", "password"]
+          ),
           responses: {
-            200: { description: "Login berhasil" },
-            401: { description: "Email atau password salah" },
+            200: response("Login berhasil"),
+            401: response("Email atau password salah"),
           },
         },
       },
@@ -285,10 +284,10 @@ const options = {
         get: {
           tags: ["Authentication"],
           summary: "Mendapatkan profil pengguna",
-          security: [{ bearerAuth: [] }],
+          security: bearer,
           responses: {
-            200: { description: "Profil pengguna berhasil diambil" },
-            401: { description: "Token tidak valid" },
+            200: response("Profil berhasil diambil"),
+            401: response("Token tidak valid"),
           },
         },
       },
@@ -297,41 +296,39 @@ const options = {
         get: {
           tags: ["Todos"],
           summary: "Mendapatkan daftar Todo",
-          security: [{ bearerAuth: [] }],
+          security: bearer,
           parameters: [
             {
               name: "status",
               in: "query",
-              schema: {
-                type: "string",
-                enum: ["pending", "in_progress", "completed"],
-              },
               description: "Filter berdasarkan status",
+              schema: status,
             },
             {
               name: "category",
               in: "query",
-              schema: { type: "string" },
               description: "Filter berdasarkan ID kategori",
+              schema: { type: "string" },
             },
             {
               name: "search",
               in: "query",
-              schema: { type: "string" },
               description: "Pencarian berdasarkan judul Todo",
+              schema: { type: "string" },
             },
             {
               name: "archived",
               in: "query",
+              description: "Menampilkan Todo aktif atau arsip",
               schema: {
                 type: "boolean",
                 default: false,
               },
-              description: "Menampilkan Todo aktif atau arsip",
             },
             {
               name: "sort",
               in: "query",
+              description: "Kolom pengurutan Todo",
               schema: {
                 type: "string",
                 enum: [
@@ -343,107 +340,55 @@ const options = {
                 ],
                 default: "created_at",
               },
-              description: "Kolom pengurutan Todo",
             },
             {
               name: "order",
               in: "query",
+              description: "asc = naik, desc = turun",
               schema: {
                 type: "string",
                 enum: ["asc", "desc"],
                 default: "desc",
               },
-              description: "Urutan naik atau turun",
             },
             {
               name: "page",
               in: "query",
+              description: "Nomor halaman",
               schema: {
                 type: "integer",
                 minimum: 1,
                 default: 1,
               },
-              description: "Nomor halaman",
             },
             {
               name: "limit",
               in: "query",
+              description: "Jumlah data per halaman",
               schema: {
                 type: "integer",
                 minimum: 1,
                 maximum: 100,
                 default: 10,
               },
-              description: "Jumlah data per halaman",
             },
           ],
           responses: {
-            200: {
-              description: "Daftar Todo berhasil diambil",
-            },
-            400: {
-              description: "Parameter query tidak valid",
-            },
-            401: {
-              description: "Token tidak valid",
-            },
+            200: response("Daftar Todo berhasil diambil"),
+            400: response("Parameter query tidak valid"),
+            401: response("Token tidak valid"),
           },
         },
 
         post: {
           tags: ["Todos"],
           summary: "Membuat Todo baru",
-          security: [{ bearerAuth: [] }],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["title"],
-                  properties: {
-                    title: {
-                      type: "string",
-                      maxLength: 150,
-                      example: "Mengerjakan tugas sekolah",
-                    },
-                    description: {
-                      type: "string",
-                      example: "Menyelesaikan tugas backend",
-                    },
-                    status: {
-                      type: "string",
-                      enum: ["pending", "in_progress", "completed"],
-                    },
-                    priority: {
-                      type: "string",
-                      enum: ["low", "medium", "high"],
-                    },
-                    due_date: {
-                      type: "string",
-                      format: "date-time",
-                      nullable: true,
-                    },
-                    category: {
-                      type: "string",
-                      nullable: true,
-                      description: "ID kategori, opsional",
-                    },
-                  },
-                },
-              },
-            },
-          },
+          security: bearer,
+          requestBody: jsonBody(todoFields, ["title"]),
           responses: {
-            201: {
-              description: "Todo berhasil dibuat",
-            },
-            400: {
-              description: "Data Todo tidak valid",
-            },
-            401: {
-              description: "Token tidak valid",
-            },
+            201: response("Todo berhasil dibuat"),
+            400: response("Data Todo tidak valid"),
+            401: response("Token tidak valid"),
           },
         },
       },
@@ -452,86 +397,35 @@ const options = {
         get: {
           tags: ["Todos"],
           summary: "Mendapatkan detail Todo",
-          security: [{ bearerAuth: [] }],
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-            },
-          ],
+          security: bearer,
+          parameters: [pathId],
           responses: {
-            200: { description: "Detail Todo berhasil diambil" },
-            404: { description: "Todo tidak ditemukan" },
+            200: response("Detail Todo berhasil diambil"),
+            404: response("Todo tidak ditemukan"),
           },
         },
 
         put: {
           tags: ["Todos"],
           summary: "Memperbarui Todo",
-          security: [{ bearerAuth: [] }],
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-            },
-          ],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    title: { type: "string" },
-                    description: { type: "string" },
-                    status: {
-                      type: "string",
-                      enum: ["pending", "in_progress", "completed"],
-                    },
-                    priority: {
-                      type: "string",
-                      enum: ["low", "medium", "high"],
-                    },
-                    due_date: {
-                      type: "string",
-                      format: "date-time",
-                      nullable: true,
-                    },
-                    category: {
-                      type: "string",
-                      nullable: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
+          security: bearer,
+          parameters: [pathId],
+          requestBody: jsonBody(todoFields),
           responses: {
-            200: { description: "Todo berhasil diperbarui" },
-            400: { description: "Data tidak valid" },
-            404: { description: "Todo tidak ditemukan" },
+            200: response("Todo berhasil diperbarui"),
+            400: response("Data tidak valid"),
+            404: response("Todo tidak ditemukan"),
           },
         },
 
         delete: {
           tags: ["Todos"],
           summary: "Menghapus Todo",
-          security: [{ bearerAuth: [] }],
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-            },
-          ],
+          security: bearer,
+          parameters: [pathId],
           responses: {
-            200: { description: "Todo berhasil dihapus" },
-            404: { description: "Todo tidak ditemukan" },
+            200: response("Todo berhasil dihapus"),
+            404: response("Todo tidak ditemukan"),
           },
         },
       },
@@ -540,18 +434,11 @@ const options = {
         patch: {
           tags: ["Todos"],
           summary: "Mengarsipkan Todo",
-          security: [{ bearerAuth: [] }],
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-            },
-          ],
+          security: bearer,
+          parameters: [pathId],
           responses: {
-            200: { description: "Todo berhasil diarsipkan" },
-            404: { description: "Todo tidak ditemukan" },
+            200: response("Todo berhasil diarsipkan"),
+            404: response("Todo tidak ditemukan"),
           },
         },
       },
@@ -560,40 +447,33 @@ const options = {
         get: {
           tags: ["Categories"],
           summary: "Mendapatkan daftar kategori",
-          security: [{ bearerAuth: [] }],
+          security: bearer,
           responses: {
-            200: { description: "Daftar kategori berhasil diambil" },
+            200: response("Daftar kategori berhasil diambil"),
+            401: response("Token tidak valid"),
           },
         },
 
         post: {
           tags: ["Categories"],
           summary: "Membuat kategori baru",
-          security: [{ bearerAuth: [] }],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["name"],
-                  properties: {
-                    name: {
-                      type: "string",
-                      example: "Sekolah",
-                    },
-                    description: {
-                      type: "string",
-                      example: "Tugas sekolah",
-                    },
-                  },
-                },
+          security: bearer,
+          requestBody: jsonBody(
+            {
+              name: {
+                type: "string",
+                example: "Sekolah",
+              },
+              description: {
+                type: "string",
+                example: "Tugas sekolah",
               },
             },
-          },
+            ["name"]
+          ),
           responses: {
-            201: { description: "Kategori berhasil dibuat" },
-            400: { description: "Data kategori tidak valid" },
+            201: response("Kategori berhasil dibuat"),
+            400: response("Data kategori tidak valid"),
           },
         },
       },
@@ -602,68 +482,38 @@ const options = {
         get: {
           tags: ["Categories"],
           summary: "Mendapatkan detail kategori",
-          security: [{ bearerAuth: [] }],
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-            },
-          ],
+          security: bearer,
+          parameters: [pathId],
           responses: {
-            200: { description: "Detail kategori berhasil diambil" },
-            404: { description: "Kategori tidak ditemukan" },
+            200: response("Detail kategori berhasil diambil"),
+            404: response("Kategori tidak ditemukan"),
           },
         },
 
         put: {
           tags: ["Categories"],
           summary: "Memperbarui kategori",
-          security: [{ bearerAuth: [] }],
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-            },
-          ],
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    description: { type: "string" },
-                  },
-                },
-              },
-            },
-          },
+          security: bearer,
+          parameters: [pathId],
+          requestBody: jsonBody({
+            name: { type: "string" },
+            description: { type: "string" },
+          }),
           responses: {
-            200: { description: "Kategori berhasil diperbarui" },
-            404: { description: "Kategori tidak ditemukan" },
+            200: response("Kategori berhasil diperbarui"),
+            400: response("Data tidak valid"),
+            404: response("Kategori tidak ditemukan"),
           },
         },
 
         delete: {
           tags: ["Categories"],
           summary: "Menghapus kategori",
-          security: [{ bearerAuth: [] }],
-          parameters: [
-            {
-              name: "id",
-              in: "path",
-              required: true,
-              schema: { type: "string" },
-            },
-          ],
+          security: bearer,
+          parameters: [pathId],
           responses: {
-            200: { description: "Kategori berhasil dihapus" },
-            404: { description: "Kategori tidak ditemukan" },
+            200: response("Kategori berhasil dihapus"),
+            404: response("Kategori tidak ditemukan"),
           },
         },
       },
@@ -672,14 +522,59 @@ const options = {
         get: {
           tags: ["Activity Logs"],
           summary: "Mendapatkan riwayat aktivitas",
-          security: [{ bearerAuth: [] }],
+          description:
+            "Mengambil riwayat aktivitas pengguna. Dukungan parameter pagination harus sesuai implementasi backend.",
+          security: bearer,
+          parameters: [
+            {
+              name: "page",
+              in: "query",
+              description: "Nomor halaman",
+              schema: {
+                type: "integer",
+                minimum: 1,
+                default: 1,
+              },
+            },
+            {
+              name: "limit",
+              in: "query",
+              description: "Jumlah data per halaman",
+              schema: {
+                type: "integer",
+                minimum: 1,
+                maximum: 100,
+                default: 10,
+              },
+            },
+          ],
           responses: {
             200: {
               description: "Riwayat aktivitas berhasil diambil",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: {
+                        type: "boolean",
+                        example: true,
+                      },
+                      data: {
+                        type: "array",
+                        items: {
+                          $ref: "#/components/schemas/ActivityLog",
+                        },
+                      },
+                    },
+                    additionalProperties: true,
+                  },
+                },
+              },
             },
-            401: {
-              description: "Token tidak valid",
-            },
+            400: response("Parameter tidak valid"),
+            401: response("Token tidak valid"),
+            500: response("Terjadi kesalahan server"),
           },
         },
       },
@@ -688,14 +583,10 @@ const options = {
         get: {
           tags: ["External"],
           summary: "Mendapatkan ringkasan Todo",
-          security: [{ apiKeyAuth: [] }],
+          security: apiKey,
           responses: {
-            200: {
-              description: "Ringkasan berhasil diambil",
-            },
-            401: {
-              description: "API Key tidak valid",
-            },
+            200: response("Ringkasan berhasil diambil"),
+            401: response("API Key tidak valid"),
           },
         },
       },
@@ -704,21 +595,16 @@ const options = {
         get: {
           tags: ["External"],
           summary: "Mendapatkan aktivitas melalui API Key",
-          security: [{ apiKeyAuth: [] }],
+          security: apiKey,
           responses: {
-            200: {
-              description: "Riwayat aktivitas berhasil diambil",
-            },
-            401: {
-              description: "API Key tidak valid",
-            },
+            200: response("Riwayat aktivitas berhasil diambil"),
+            401: response("API Key tidak valid"),
           },
         },
       },
     },
   },
 
-  // Tetap memuat anotasi Swagger dari file routes jika ada.
   apis: ["./routes/*.js"],
 };
 
