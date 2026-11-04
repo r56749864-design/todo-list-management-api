@@ -296,6 +296,8 @@ const options = {
         get: {
           tags: ["Todos"],
           summary: "Mendapatkan daftar Todo",
+          description:
+            "Mendukung filter archived true/false, sorting menggunakan order asc/desc, atau awalan minus pada sort untuk descending.",
           security: bearer,
           parameters: [
             {
@@ -319,16 +321,20 @@ const options = {
             {
               name: "archived",
               in: "query",
-              description: "Menampilkan Todo aktif atau arsip",
+              required: false,
+              description:
+                "Filter status arsip: true untuk Todo yang diarsipkan, false untuk Todo aktif.",
               schema: {
                 type: "boolean",
+                enum: [true, false],
                 default: false,
               },
             },
             {
               name: "sort",
               in: "query",
-              description: "Kolom pengurutan Todo",
+              description:
+                "Kolom pengurutan. Gunakan awalan minus (-) untuk descending. Contoh: -created_at atau -title.",
               schema: {
                 type: "string",
                 enum: [
@@ -337,14 +343,21 @@ const options = {
                   "due_date",
                   "title",
                   "priority",
+                  "-created_at",
+                  "-updated_at",
+                  "-due_date",
+                  "-title",
+                  "-priority",
                 ],
                 default: "created_at",
               },
+              example: "-created_at",
             },
             {
               name: "order",
               in: "query",
-              description: "asc = naik, desc = turun",
+              description:
+                "Arah pengurutan untuk sort tanpa awalan minus. asc = naik, desc = turun.",
               schema: {
                 type: "string",
                 enum: ["asc", "desc"],

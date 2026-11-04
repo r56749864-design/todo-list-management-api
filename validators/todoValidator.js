@@ -1,3 +1,4 @@
+
 const { body, param, query } = require("express-validator");
 
 // Validasi saat membuat Todo
@@ -32,7 +33,6 @@ const createTodoValidator = [
     .isIn(["low", "medium", "high"])
     .withMessage("Prioritas todo tidak valid"),
 
-  // Kategori opsional
   body("category")
     .optional({ values: "null" })
     .isMongoId()
@@ -81,7 +81,6 @@ const updateTodoValidator = [
     .isIn(["low", "medium", "high"])
     .withMessage("Prioritas todo tidak valid"),
 
-  // Kategori boleh tidak dikirim atau bernilai null
   body("category")
     .optional({ values: "null" })
     .isMongoId()
@@ -100,7 +99,7 @@ const todoIdValidator = [
     .withMessage("ID todo tidak valid"),
 ];
 
-// Validasi pencarian, filter, dan pagination
+// Validasi pencarian, filter, sorting, dan pagination
 const listTodoValidator = [
   query("search")
     .optional()
@@ -141,7 +140,18 @@ const listTodoValidator = [
 
   query("sort")
     .optional()
-    .isIn(["created_at", "updated_at", "due_date", "title", "priority"])
+    .isIn([
+      "created_at",
+      "updated_at",
+      "due_date",
+      "title",
+      "priority",
+      "-created_at",
+      "-updated_at",
+      "-due_date",
+      "-title",
+      "-priority",
+    ])
     .withMessage("Kolom pengurutan tidak valid"),
 
   query("order")

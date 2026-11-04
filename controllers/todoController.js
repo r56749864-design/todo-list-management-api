@@ -147,19 +147,32 @@ const getTodos = async (req, res) => {
       "priority",
     ];
 
-    if (!allowedSort.includes(sort)) {
+    // Sort dengan awalan minus berarti descending
+    const isDescending = sort.startsWith("-");
+    const sortField = isDescending ? sort.slice(1) : sort;
+
+    if (!allowedSort.includes(sortField)) {
       return res.status(400).json({
         success: false,
         message: "Parameter sort tidak valid",
       });
     }
 
+    // Validasi order tetap berlaku untuk format sorting biasa
     if (order !== "asc" && order !== "desc") {
       return res.status(400).json({
         success: false,
         message: "Parameter order harus asc atau desc",
       });
     }
+
+    // Jika sort diawali minus, descending menjadi prioritas.
+    // Jika tidak, gunakan parameter order seperti sebelumnya.
+    const sortOrder = isDescending
+      ? -1
+      : order === "asc"
+        ? 1
+        : -1;
 
     // Validasi pagination
     const pageNumber = Number(page);
@@ -217,12 +230,10 @@ const getTodos = async (req, res) => {
       };
     }
 
-    const sortOrder = order === "asc" ? 1 : -1;
-
     // Query data dan hitung total secara bersamaan
     const [todos, total] = await Promise.all([
       Todo.find(filter)
-        .sort({ [sort]: sortOrder })
+        .sort({ [sortField]: sortOrder })
         .skip((pageNumber - 1) * pageSize)
         .limit(pageSize),
 
